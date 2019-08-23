@@ -10,3 +10,15 @@
  This will also have measures in place to ensure we don't overload the stats site (**Not implemented yet**):
  * We won't use live stats unless and until the API has a good way to do that
  * Rankings for each league will be stored locally when first retrieved and then refreshed only if the data is over 24 hours old
+
+## Methodology
+Scraping based on this: http://scraping.pro/scraping-in-php-with-curl/
+
+## TODO
+
+* Implement initially using scraping (http://scraping.pro/scraping-in-php-with-curl/)
+* Build test using shortcode
+* Convert to widget (leave shortcode as bonus capability)
+* Update Readme.txt
+* Submit to WordPress.org
+* Convert to API when available
