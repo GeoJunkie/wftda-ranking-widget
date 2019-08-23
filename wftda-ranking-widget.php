@@ -1,7 +1,16 @@
 <?php
 /**
  * Plugin Name: WFTDA Rankings Reader
- */
+ * Plugin URI:        https://github.com/GeoJunkie/wftda-ranking-widget
+	* Description:       A widget to show a WFTDA league's ranking information in a widget.
+	* Version:           0.0.1
+	* Author:            Mike Straw (a.k.a. Stray Taco)
+	* Author URI:        https://queerderbytaco.com
+	* Text Domain:       wftda-ranking-widgeet-locale
+	* License:           GPL-2.0+
+	* License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+	* Domain Path:       /languages
+	*/
 // Add Shortcode
 function wftdarw_ranking( $atts ) {
 
