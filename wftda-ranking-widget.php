@@ -1,134 +1,74 @@
 <?php
+
 /**
- * Plugin Name: WFTDA Rankings Reader
+ * @link              https://bit.ly/Stray_Taco
+ * @since             1.0.0
+ * @package           Wftda_Ranking_Widget
+ *
+ * @wordpress-plugin
+ * Plugin Name:       WFTDA Rankings Widget
  * Plugin URI:        https://github.com/GeoJunkie/wftda-ranking-widget
-    * Description:       A widget to show a WFTDA league's ranking information in a widget.
-    * Version:           0.0.1
-    * Author:            Mike Straw (a.k.a. Stray Taco)
-    * Author URI:        https://queerderbytaco.com
-    * Text Domain:       wftda-ranking-widgeet-locale
-    * License:           GPL-2.0+
-    * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
-    * Domain Path:       /languages
-    */
-// Add Shortcode
-function wftdarw_ranking($atts)
-{
+ * Description:       A widget to show a WFTDA league's ranking information in a widget.
+ * Version:           1.0.0
+ * Author:            Mike Straw (aka Stray Taco)
+ * Author URI:        http://bit.ly/Stray_Taco
+ * License:           GPL-2.0+
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain:       wftda-ranking-widget
+ * Domain Path:       /languages
+ */
 
-    // Attributes
-    $atts = shortcode_atts(
-        array(
-            'league' => '',
-        ),
-        $atts
-    );
-
-    $stats_site = "http://stats.wftda.com";
-    $url = "$stats_site/league/" . $atts['league'];
-    $curl = curl_init($url);
-
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-    $page = curl_exec($curl);
-
-    if (curl_errno($curl)) { // check for execution errors
-        return 'Scraper error: ' . curl_error($curl);
-        exit;
-    }
-
-    curl_close($curl);
-
-    $site_file = file_get_contents($url);
-    $dom = new domDocument;
-
-    // set error level to prevent DOMDoc known warnings
-    $internalErrors = libxml_use_internal_errors(true);
-
-    $dom->loadHTML($site_file);
-
-    // Restore error level
-    libxml_use_internal_errors($internalErrors);
-
-
-    $dom->preserveWhiteSpace = false;
-    $xpath = new DOMXPath($dom);
-    $stats = array();
-
-    $logo_node = $xpath->query("//*[@class='leagueMain--image']");
-
-    if ($logo_node->length == 0) {
-        return "Logo Not Found";
-    }
-
-    $stats['logo'] = $logo_node->item(0)->attributes->getNamedItem("src")->nodeValue;
-
-    $league_name_node = $xpath->query("//*[@class='leagueMainStatsInner']/h1");
-
-    if ($league_name_node->length == 0) {
-        return "League Name Not Found";
-    }
-
-    $stats['league'] = $league_name_node->item(0)->nodeValue;
-
-    $stats_nodes = $xpath->query("//*[@class='leagueMainStats--rankingStats rankingsStats']/*");
-
-    if ($stats_nodes->length == 0) {
-        return "Stats Not Found";
-    }
-
-    // GPA is first stat, SF is second, then info button and explanation
-
-    $stats['game_point_average'] = $stats_nodes->item(0)->nodeValue;
-    $stats['strength_factor'] = $stats_nodes->item(1)->nodeValue;
-    $stats['gpa_sf_explanation'] = $dom->saveHTML($stats_nodes->item(3));
-
-    $rank_nodes = $xpath->query("//*[@class='leagueMainStats--rank rankText']");
-
-    // World ranking listed first, Regional is second
-
-    if ($rank_nodes->length != 2) {
-        return "Rankings Not Found";
-    }
-
-    $stats['world_ranking'] = $rank_nodes->item(0)->nodeValue;
-    $stats['regional_ranking'] = $rank_nodes->item(1)->nodeValue;
-
-    // For win/loss we'll be allowing for an option to choose how many to show (up to 5 since that's what the stats page shows)
-
-    $win_loss_nodes = $xpath->query("//*[@class='formCircles leagueMainStats--formCircles']/span");
-
-    if ($win_loss_nodes == 0) {
-        return "Win/Loss info not found";
-    }
-
-    $stats['win_loss_info'] = array();
-    foreach ($win_loss_nodes as $node) {
-        $stats['win_loss_info'][] = $node->nodeValue;
-    }
-
-    return sprintf(
-        '<a href="%s"><img src="%s%s"/></a> <ul><li>Name: %s</li><li>GPA: %s</li><li>Strength Factor: %s</li><li>What is this? %s</li><li>Ranking:<ul><li>World: %s</li><li>Region: %s</li><li>Record: %s, %s, %s, %s, %s</li></ul>',
-        $url,
-        $stats_site,
-        $stats['logo'],
-        $stats['league'],
-        $stats['game_point_average'],
-        $stats['strength_factor'],
-        $stats['gpa_sf_explanation'],
-        $stats['world_ranking'],
-        $stats['regional_ranking'],
-        $stats['win_loss_info'][0],
-        $stats['win_loss_info'][1],
-        $stats['win_loss_info'][2],
-        $stats['win_loss_info'][3],
-        $stats['win_loss_info'][4]
-    );
+// If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
 }
-add_shortcode('wftda_ranking', 'wftdarw_ranking');
 
-function dump($variable)
-{
-    print "<hr/><pre>";
-    print_r($variable);
-    print "</pre><hr/>";
+/**
+ * Current plugin version.
+ * Start at version 1.0.0 and use SemVer - https://semver.org
+ */
+define( 'WFTDA_RANKING_WIDGET_VERSION', '1.0.0' );
+
+/**
+ * The code that runs during plugin activation.
+ * This action is documented in includes/class-wftda-ranking-widget-activator.php
+ */
+function activate_wftda_ranking_widget() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wftda-ranking-widget-activator.php';
+	Wftda_Ranking_Widget_Activator::activate();
 }
+
+/**
+ * The code that runs during plugin deactivation.
+ * This action is documented in includes/class-wftda-ranking-widget-deactivator.php
+ */
+function deactivate_wftda_ranking_widget() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wftda-ranking-widget-deactivator.php';
+	Wftda_Ranking_Widget_Deactivator::deactivate();
+}
+
+register_activation_hook( __FILE__, 'activate_wftda_ranking_widget' );
+register_deactivation_hook( __FILE__, 'deactivate_wftda_ranking_widget' );
+
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/class-wftda-ranking-widget.php';
+
+/**
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ *
+ * @since    1.0.0
+ */
+function run_wftda_ranking_widget() {
+
+	$plugin = new Wftda_Ranking_Widget();
+	$plugin->run();
+
+}
+run_wftda_ranking_widget();
