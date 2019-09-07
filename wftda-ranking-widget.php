@@ -54,7 +54,7 @@ function wftdarw_ranking( $atts ) {
 
   $regex = '/<div class="leagueMainStats--rankingStats rankingsStats">\n\n<span>(0-9\.)/sm';
 
-  return sprintf ('<img src="%s%s"/> <ul><li>Name: %s</li><li>GPA: %s</li><li>Strength Factor: </li></ul>', $stats_site,  $stats['logo'], $stats['league'], '', '');
+  return sprintf ('<a href="%s"><img src="%s%s"/></a> <ul><li>Name: %s</li><li>GPA: %s</li><li>Strength Factor: </li></ul>', $url, $stats_site,  $stats['logo'], $stats['league'], '', '');
 
 }
 add_shortcode( 'wftda_ranking', 'wftdarw_ranking' );
