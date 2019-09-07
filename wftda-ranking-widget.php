@@ -2,59 +2,133 @@
 /**
  * Plugin Name: WFTDA Rankings Reader
  * Plugin URI:        https://github.com/GeoJunkie/wftda-ranking-widget
-	* Description:       A widget to show a WFTDA league's ranking information in a widget.
-	* Version:           0.0.1
-	* Author:            Mike Straw (a.k.a. Stray Taco)
-	* Author URI:        https://queerderbytaco.com
-	* Text Domain:       wftda-ranking-widgeet-locale
-	* License:           GPL-2.0+
-	* License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
-	* Domain Path:       /languages
-	*/
+    * Description:       A widget to show a WFTDA league's ranking information in a widget.
+    * Version:           0.0.1
+    * Author:            Mike Straw (a.k.a. Stray Taco)
+    * Author URI:        https://queerderbytaco.com
+    * Text Domain:       wftda-ranking-widgeet-locale
+    * License:           GPL-2.0+
+    * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+    * Domain Path:       /languages
+    */
 // Add Shortcode
-function wftdarw_ranking( $atts ) {
+function wftdarw_ranking($atts)
+{
 
-	// Attributes
-	$atts = shortcode_atts(
-		array(
-			'league' => '',
-		),
-		$atts
-	);
+    // Attributes
+    $atts = shortcode_atts(
+        array(
+            'league' => '',
+        ),
+        $atts
+    );
 
-  $stats_site = "http://stats.wftda.com";
-  $url = "$stats_site/league/" . $atts['league'];
-  $curl = curl_init($url);
+    $stats_site = "http://stats.wftda.com";
+    $url = "$stats_site/league/" . $atts['league'];
+    $curl = curl_init($url);
 
-  curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-  $page = curl_exec($curl);
+    $page = curl_exec($curl);
 
-  if(curl_errno($curl)) // check for execution errors
-  {
-  	return 'Scraper error: ' . curl_error($curl);
-  	exit;
-  }
+    if (curl_errno($curl)) { // check for execution errors
+        return 'Scraper error: ' . curl_error($curl);
+        exit;
+    }
 
-  curl_close($curl);
+    curl_close($curl);
 
-  $stats = array();
+    $site_file = file_get_contents($url);
+    $dom = new domDocument;
 
-  $regex = '/<img class="leagueMain--image" src="(.*?)"/s';
-  if ( preg_match($regex, $page, $list) )
-      $stats['logo'] = $list[1];
-  else
-      return "Logo Not found";
+    // set error level to prevent DOMDoc known warnings
+    $internalErrors = libxml_use_internal_errors(true);
 
-  $regex = '/<div class="leagueMainStatsInner">\s*<h1>(.*?)<\/h1>/sm';
-  if ( preg_match($regex, $page, $list) )
-      $stats['league'] = $list[0];
-  else
-      return "League name not found";
+    $dom->loadHTML($site_file);
 
-  $regex = '/<div class="leagueMainStats--rankingStats rankingsStats">\n\n<span>(0-9\.)/sm';
+    // Restore error level
+    libxml_use_internal_errors($internalErrors);
 
-  return sprintf ('<a href="%s"><img src="%s%s"/></a> <ul><li>Name: %s</li><li>GPA: %s</li><li>Strength Factor: </li></ul>', $url, $stats_site,  $stats['logo'], $stats['league'], '', '');
 
+    $dom->preserveWhiteSpace = false;
+    $xpath = new DOMXPath($dom);
+    $stats = array();
+
+    $logo_node = $xpath->query("//*[@class='leagueMain--image']");
+
+    if ($logo_node->length == 0) {
+        return "Logo Not Found";
+    }
+
+    $stats['logo'] = $logo_node->item(0)->attributes->getNamedItem("src")->nodeValue;
+
+    $league_name_node = $xpath->query("//*[@class='leagueMainStatsInner']/h1");
+
+    if ($league_name_node->length == 0) {
+        return "League Name Not Found";
+    }
+
+    $stats['league'] = $league_name_node->item(0)->nodeValue;
+
+    $stats_nodes = $xpath->query("//*[@class='leagueMainStats--rankingStats rankingsStats']/*");
+
+    if ($stats_nodes->length == 0) {
+        return "Stats Not Found";
+    }
+
+    // GPA is first stat, SF is second, then info button and explanation
+
+    $stats['game_point_average'] = $stats_nodes->item(0)->nodeValue;
+    $stats['strength_factor'] = $stats_nodes->item(1)->nodeValue;
+    $stats['gpa_sf_explanation'] = $dom->saveHTML($stats_nodes->item(3));
+
+    $rank_nodes = $xpath->query("//*[@class='leagueMainStats--rank rankText']");
+
+    // World ranking listed first, Regional is second
+
+    if ($rank_nodes->length != 2) {
+        return "Rankings Not Found";
+    }
+
+    $stats['world_ranking'] = $rank_nodes->item(0)->nodeValue;
+    $stats['regional_ranking'] = $rank_nodes->item(1)->nodeValue;
+
+    // For win/loss we'll be allowing for an option to choose how many to show (up to 5 since that's what the stats page shows)
+
+    $win_loss_nodes = $xpath->query("//*[@class='formCircles leagueMainStats--formCircles']/span");
+
+    if ($win_loss_nodes == 0) {
+        return "Win/Loss info not found";
+    }
+
+    $stats['win_loss_info'] = array();
+    foreach ($win_loss_nodes as $node) {
+        $stats['win_loss_info'][] = $node->nodeValue;
+    }
+
+    return sprintf(
+        '<a href="%s"><img src="%s%s"/></a> <ul><li>Name: %s</li><li>GPA: %s</li><li>Strength Factor: %s</li><li>What is this? %s</li><li>Ranking:<ul><li>World: %s</li><li>Region: %s</li><li>Record: %s, %s, %s, %s, %s</li></ul>',
+        $url,
+        $stats_site,
+        $stats['logo'],
+        $stats['league'],
+        $stats['game_point_average'],
+        $stats['strength_factor'],
+        $stats['gpa_sf_explanation'],
+        $stats['world_ranking'],
+        $stats['regional_ranking'],
+        $stats['win_loss_info'][0],
+        $stats['win_loss_info'][1],
+        $stats['win_loss_info'][2],
+        $stats['win_loss_info'][3],
+        $stats['win_loss_info'][4]
+    );
 }
-add_shortcode( 'wftda_ranking', 'wftdarw_ranking' );
+add_shortcode('wftda_ranking', 'wftdarw_ranking');
+
+function dump($variable)
+{
+    print "<hr/><pre>";
+    print_r($variable);
+    print "</pre><hr/>";
+}
