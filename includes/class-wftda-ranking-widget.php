@@ -90,6 +90,8 @@ class Wftda_Ranking_Widget {
 	 * - Wftda_Ranking_Widget_i18n. Defines internationalization functionality.
 	 * - Wftda_Ranking_Widget_Admin. Defines all hooks for the admin area.
 	 * - Wftda_Ranking_Widget_Public. Defines all hooks for the public side of the site.
+	 * - Wftda_Ranking_Widget_Options. Manages plugin options.
+	 * - Wftda_Ranking_Widget_League. League information.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -121,6 +123,16 @@ class Wftda_Ranking_Widget {
 		 * side of the site.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-wftda-ranking-widget-public.php';
+
+		/**
+		 * The class responsible for storing and retrieving plugin options.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wftda-ranking-widget-options.php';
+
+		/**
+		 * The class responsible for league information.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wftda-ranking-widget-league.php';
 
 		$this->loader = new Wftda_Ranking_Widget_Loader();
 

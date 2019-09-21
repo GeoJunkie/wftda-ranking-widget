@@ -30,7 +30,8 @@ class Wftda_Ranking_Widget_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
+		$options = new Wftda_Ranking_Widget_Options;
+		$options->initialize();
 	}
 
 }

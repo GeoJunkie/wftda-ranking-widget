@@ -33,6 +33,7 @@ x Implement initially using scraping (http://scraping.pro/scraping-in-php-with-c
 x Build test using shortcode
 o Convert to widget (leave shortcode as bonus capability)
 o Update README.txt
+o Add hooks for extendability
 o Submit to WordPress.org
 o Convert to API when available
 
