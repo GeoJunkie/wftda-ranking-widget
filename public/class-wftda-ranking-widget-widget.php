@@ -19,9 +19,9 @@ class Wftda_Ranking_Widget_Widget extends WP_Widget {
 	 */
 	function __construct() {
 		parent::__construct(
-			'foo_widget', // Base ID
-			esc_html__( 'Widget Title', 'text_domain' ), // Name
-			array( 'description' => esc_html__( 'A Foo Widget', 'text_domain' ), ) // Args
+			'wftda_ranking_widget', // Base ID
+			esc_html__( 'wftda_ranking_widget', 'text_domain' ), // Name
+			array( 'description' => esc_html__( 'Widget for league ranking in the WFTDA', 'text_domain' ), ) // Args
 		);
 	}
 
